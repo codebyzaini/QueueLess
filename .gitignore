@@ -1,0 +1,28 @@
+# QueueLess .gitignore
+
+# Local database configuration secrets
+config/database.local.php
+/etc/queueless/database.php
+
+# Environment and sensitive backups
+*.env
+*.bak
+*.local
+*.swp
+*~
+
+# Operating system files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE and editor settings
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Apache / Web server local overrides
+.htaccess.local
+error_log
+access_log

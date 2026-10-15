@@ -1,0 +1,23 @@
+<?php
+/**
+ * QueueLess — Smart Campus Queue Management System
+ * Database Configuration Template
+ *
+ * DO NOT commit this file with real passwords.
+ * In production / Ubuntu deployment, copy this file to:
+ *   /etc/queueless/database.php
+ *
+ * Set secure file ownership and permissions:
+ *   sudo mkdir -p /etc/queueless
+ *   sudo chown -R www-data:www-data /etc/queueless
+ *   sudo chmod 600 /etc/queueless/database.php
+ */
+
+return [
+    'host'     => '127.0.0.1',           // MySQL server host
+    'port'     => 3306,                  // Default MySQL port
+    'database' => 'queueless_db',        // Database name
+    'username' => 'queueless_app',       // Dedicated least-privilege DB user
+    'password' => 'ChangeThisToAStrongPassword!', // Secure password
+    'charset'  => 'utf8mb4'              // UTF-8 multibyte encoding
+];
