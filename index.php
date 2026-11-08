@@ -2,10 +2,6 @@
 /**
  * QueueLess — Smart Campus Queue Management System
  * Public Landing Page
- *
- * Welcomes students, outlines the queue system benefits, and directs
- * unauthenticated visitors to register or sign in. Redirects active
- * sessions directly to the student dashboard.
  */
 
 declare(strict_types=1);
@@ -13,102 +9,258 @@ declare(strict_types=1);
 require_once __DIR__ . '/includes/functions.php';
 require_once __DIR__ . '/includes/auth.php';
 
-// Redirect authenticated users immediately to their student dashboard
+// Route authenticated users to their appropriate portal.
 if (is_logged_in()) {
-    redirect('home.php');
+    $user = current_user();
+
+    $destination = match ($user['role'] ?? 'student') {
+        'admin' => 'admin/index.php',
+        'staff' => 'staff/index.php',
+        default => 'home.php',
+    };
+
+    redirect($destination);
 }
 
-$pageTitle = 'Campus Queue Management';
+$pageTitle = 'Smart Campus Queue Management';
 $activeNav = 'index';
+
 require_once __DIR__ . '/includes/header.php';
 ?>
 
-<div class="container hero-section">
+<section class="container hero-section">
     <div class="hero-grid">
+
         <div class="hero-content">
+
             <div class="hero-badge-pill">
-                <span class="pill-dot"></span>
-                <span>University Queue Operations • Milestone 1</span>
+                <span class="pill-dot" aria-hidden="true"></span>
+                <span>Smarter Campus Service Experience</span>
             </div>
-            <h1 class="hero-title">Skip the campus waiting line. Manage your time.</h1>
+
+            <h1 class="hero-title">
+                Your time matters.
+                <span class="brand-accent">Your queue should too.</span>
+            </h1>
+
             <p class="hero-description">
-                QueueLess replaces crowded administrative hallways with an efficient, transparent virtual queue. Reserve your service token online, track queue availability, and arrive at department counters precisely when you are called.
+                Skip unnecessary campus waiting lines with QueueLess.
+                Join university service queues online, keep track of your
+                position, and know when it is your turn — all from one
+                convenient student portal.
             </p>
+
             <div class="hero-actions">
-                <a href="register.php" class="btn btn-lg btn-primary" id="hero-get-started-btn">
-                    Create Student Account
+
+                <a href="register.php"
+                   class="btn btn-lg btn-primary"
+                   id="hero-get-started-btn">
+                    Get Started
                 </a>
-                <a href="login.php" class="btn btn-lg btn-outline" id="hero-login-btn">
-                    Sign In to Portal
+
+                <a href="login.php"
+                   class="btn btn-lg btn-outline"
+                   id="hero-login-btn">
+                    Sign In
                 </a>
+
             </div>
+
+            <p class="form-text">
+                Simple queue management for a more organized campus.
+            </p>
+
         </div>
 
         <div class="hero-preview-col">
-            <!-- Illustrative Ticket Preview (Explicitly labeled as Sample Data) -->
-            <div class="ticket-preview-card" aria-label="Sample Queue Ticket Preview">
+
+            <div class="ticket-preview-card"
+                 aria-label="Illustrative virtual queue ticket preview">
+
                 <div class="ticket-header">
-                    <span class="ticket-header-title">Registrar's Office</span>
-                    <span class="ticket-header-pill">Counter 02</span>
+
+                    <span class="ticket-header-title">
+                        Student Service
+                    </span>
+
+                    <span class="ticket-header-pill">
+                        Queue Preview
+                    </span>
+
                 </div>
+
                 <div class="ticket-body">
-                    <div class="token-large">R-104</div>
-                    <div class="token-label">Virtual Token Number</div>
-                    <div class="ticket-metrics">
-                        <div class="metric-item">
-                            <div class="metric-val">3</div>
-                            <div class="metric-label">Ahead of You</div>
-                        </div>
-                        <div class="metric-item">
-                            <div class="metric-val">~12 min</div>
-                            <div class="metric-label">Est. Wait Time</div>
-                        </div>
+
+                    <div class="token-label">
+                        YOUR SAMPLE TOKEN
                     </div>
+
+                    <div class="token-large">
+                        A-024
+                    </div>
+
+                    <div class="ticket-metrics">
+
+                        <div class="metric-item">
+                            <div class="metric-val">03</div>
+                            <div class="metric-label">People Ahead</div>
+                        </div>
+
+                        <div class="metric-item">
+                            <div class="metric-val">12 min</div>
+                            <div class="metric-label">Estimated Wait</div>
+                        </div>
+
+                    </div>
+
                     <p class="form-text">
-                        Status: <strong>Serving R-101</strong>
+                        Example status:
+                        <strong>Waiting in queue</strong>
                     </p>
+
                 </div>
+
                 <div class="ticket-notice-banner">
-                    Illustrative Preview — Sample Data Only
+                    Illustrative preview — not live queue data
                 </div>
+
             </div>
+
         </div>
+
     </div>
-</div>
+</section>
 
 <section class="features-section">
+
     <div class="container">
+
         <div class="section-header">
-            <h2 class="section-title">How Virtual Queueing Works</h2>
-            <p class="section-subtitle">A straightforward three-step workflow designed for student convenience and department efficiency.</p>
+
+            <h2 class="section-title">
+                A better way to access campus services
+            </h2>
+
+            <p class="section-subtitle">
+                Spend less time waiting and more time focusing on what
+                matters. QueueLess makes university service queues easier
+                to access and manage.
+            </p>
+
         </div>
 
         <div class="steps-grid">
-            <div class="step-card">
-                <div class="step-number">1</div>
-                <h3 class="step-title">Select Campus Department</h3>
-                <p class="step-text">
-                    Log in to your authenticated student dashboard to view real-time department counter statuses, including the Registrar, Financial Aid, and Academic Advising.
-                </p>
-            </div>
 
-            <div class="step-card">
-                <div class="step-number">2</div>
-                <h3 class="step-title">Receive Your Token</h3>
-                <p class="step-text">
-                    Reserve your position virtually without standing in physical hallways. Your secure sequential token guarantees your spot in line.
-                </p>
-            </div>
+            <article class="step-card">
 
-            <div class="step-card">
-                <div class="step-number">3</div>
-                <h3 class="step-title">Arrive When Called</h3>
+                <div class="step-number">01</div>
+
+                <h3 class="step-title">
+                    Choose a Service
+                </h3>
+
                 <p class="step-text">
-                    Spend your waiting time studying or relaxing. Head directly to the campus counter once your token is called by university staff.
+                    Browse available university services, including
+                    Admissions, Accounts, Examinations, Student Affairs,
+                    and IT Support.
                 </p>
-            </div>
+
+            </article>
+
+            <article class="step-card">
+
+                <div class="step-number">02</div>
+
+                <h3 class="step-title">
+                    Join the Queue
+                </h3>
+
+                <p class="step-text">
+                    Receive a unique queue token and reserve your place
+                    without having to stand in a physical line.
+                </p>
+
+            </article>
+
+            <article class="step-card">
+
+                <div class="step-number">03</div>
+
+                <h3 class="step-title">
+                    Track Your Turn
+                </h3>
+
+                <p class="step-text">
+                    Follow your queue status through your student portal
+                    and visit the service counter when your turn arrives.
+                </p>
+
+            </article>
+
         </div>
+
     </div>
+
+</section>
+
+<section class="features-section">
+
+    <div class="container">
+
+        <div class="section-header">
+
+            <h2 class="section-title">
+                Campus services, one platform
+            </h2>
+
+            <p class="section-subtitle">
+                Access essential university departments through a
+                centralized queue management experience.
+            </p>
+
+        </div>
+
+        <div class="steps-grid">
+
+            <article class="step-card">
+                <h3 class="step-title">Admissions Office</h3>
+                <p class="step-text">
+                    Manage admission-related enquiries and applications.
+                </p>
+            </article>
+
+            <article class="step-card">
+                <h3 class="step-title">Accounts Office</h3>
+                <p class="step-text">
+                    Access fee and account-related university services.
+                </p>
+            </article>
+
+            <article class="step-card">
+                <h3 class="step-title">Examination Office</h3>
+                <p class="step-text">
+                    Get assistance with examination-related matters.
+                </p>
+            </article>
+
+            <article class="step-card">
+                <h3 class="step-title">Student Affairs</h3>
+                <p class="step-text">
+                    Reach student support and administrative services.
+                </p>
+            </article>
+
+            <article class="step-card">
+                <h3 class="step-title">IT Support</h3>
+                <p class="step-text">
+                    Request help with campus technology and IT services.
+                </p>
+            </article>
+
+        </div>
+
+    </div>
+
 </section>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

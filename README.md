@@ -133,5 +133,3 @@ When presenting this submission, you can confidently explain:
 2. **Database Concurrency & Constraints:** Refer to [`docs/DATABASE_DESIGN.md`](docs/DATABASE_DESIGN.md) to explain why active-ticket safety uses both application row locking and a generated-column unique constraint rather than a naive unique key on status.
 3. **Security Engineering:** Point out that real credentials are never in the project directory, cookies are hardened with `HttpOnly` and `SameSite`, and logout requires a POST method with CSRF validation.
 4. **Milestone Transparency:** Explain that this first submission delivers the authentication foundation, database architecture, and live service monitoring, setting the stage for Milestone 2's interactive token queue advancement.
-5. find . -name '*.php' -not -path './vendor/*' -print0 | xargs -0 -n1 php -l
-find . -type f -name '*.php' -not -path './vendor/*' -exec php -l {} \;

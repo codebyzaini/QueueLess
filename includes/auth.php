@@ -1,142 +1,181 @@
 <?php
+declare(strict_types=1);
+
 /**
  * QueueLess — Smart Campus Queue Management System
- * Authentication & Session Management Module
+ * Authentication & Session Management
  *
- * Implements secure authentication lifecycle:
- * - Session state checks (is_logged_in, current_user)
- * - Route guards (require_login, require_guest)
- * - Anti-session fixation session regeneration
- * - Clean, RFC-compliant session invalidation and cookie expiration
+ * Supports:
+ * - Student, Staff, and Admin authentication
+ * - Role-based dashboard routing
+ * - Protected portal access
+ * - Session fixation protection
+ * - CSRF token rotation
+ * - Secure logout
  */
-
-declare(strict_types=1);
 
 require_once __DIR__ . '/functions.php';
 require_once __DIR__ . '/csrf.php';
 
 /**
- * Determine whether a user is currently authenticated in the active session.
- *
- * @return bool
+ * Return the dashboard URL for a user's role.
  */
-function is_logged_in(): bool {
-    init_session();
-    return !empty($_SESSION['user_id']);
+function dashboard_url(string $role): string
+{
+    return match ($role) {
+        'admin'   => '/queueless/admin/index.php',
+        'staff'   => '/queueless/staff/index.php',
+        'student' => '/queueless/home.php',
+        default   => '/queueless/login.php',
+    };
 }
 
 /**
- * Retrieve metadata for the currently logged-in user.
- *
- * @return array{id: int, name: string, email: string, role: string}|null
+ * Check whether the current session is authenticated.
  */
-function current_user(): ?array {
+function is_logged_in(): bool
+{
+    init_session();
+
+    return isset($_SESSION['user_id'])
+        && (int) $_SESSION['user_id'] > 0;
+}
+
+/**
+ * Retrieve the currently authenticated user's information.
+ */
+function current_user(): ?array
+{
     if (!is_logged_in()) {
         return null;
     }
 
+    $role = (string) ($_SESSION['user_role'] ?? '');
+
+    if (!in_array($role, ['student', 'staff', 'admin'], true)) {
+        return null;
+    }
+
     return [
-        'id'    => (int)$_SESSION['user_id'],
-        'name'  => (string)($_SESSION['user_name'] ?? 'User'),
-        'email' => (string)($_SESSION['user_email'] ?? ''),
-        'role'  => (string)($_SESSION['user_role'] ?? 'student')
+        'id'    => (int) $_SESSION['user_id'],
+        'name'  => (string) ($_SESSION['user_name'] ?? 'User'),
+        'email' => (string) ($_SESSION['user_email'] ?? ''),
+        'role'  => $role,
     ];
 }
 
 /**
- * Route protection guard: Enforce authentication.
- * Redirects unauthenticated users to the login page.
- *
- * @param string $redirectTo
- * @return void
+ * Require an authenticated user.
  */
-function require_login(string $redirectTo = 'login.php'): void {
-    if (!is_logged_in()) {
-        set_flash('warning', 'Please sign in to access your student portal.');
+function require_login(string $redirectTo = '/queueless/login.php'): void
+{
+    if (!is_logged_in() || current_user() === null) {
+        set_flash('warning', 'Please sign in to continue.');
         redirect($redirectTo);
     }
 }
 
 /**
- * Route protection guard: Enforce a specific authenticated role.
- *
- * @param string $role
- * @return void
+ * Require a particular user role.
  */
-function require_role(string $role): void {
+function require_role(string $role): void
+{
+    require_login();
+
     $user = current_user();
 
     if ($user === null || $user['role'] !== $role) {
         http_response_code(403);
-        exit('Access denied.');
+        exit('Access denied. You do not have permission to access this page.');
     }
 }
 
 /**
- * Route protection guard: Enforce authenticated student access.
- *
- * @return void
+ * Require student access.
  */
-function require_student(): void {
+function require_student(): void
+{
     require_role('student');
 }
 
 /**
- * Route protection guard: Enforce guest status.
- * Redirects already authenticated users to the home dashboard.
- *
- * @param string $redirectTo
- * @return void
+ * Require staff access.
  */
-function require_guest(string $redirectTo = 'home.php'): void {
-    if (is_logged_in()) {
-        redirect($redirectTo);
+function require_staff(): void
+{
+    require_role('staff');
+}
+
+/**
+ * Require administrator access.
+ */
+function require_admin(): void
+{
+    require_role('admin');
+}
+
+/**
+ * Prevent authenticated users from accessing guest-only pages.
+ */
+function require_guest(string $redirectTo = ''): void
+{
+    $user = current_user();
+
+    if ($user !== null) {
+        redirect(
+            $redirectTo !== ''
+                ? $redirectTo
+                : dashboard_url($user['role'])
+        );
     }
 }
 
 /**
- * Establish an authenticated user session.
- * Regenerates the session ID to thwart session fixation attacks
- * and rotates the synchronizer CSRF token across the privilege boundary.
- *
- * @param array{id: int|string, name: string, email: string, role: string} $user
- * @return void
+ * Create an authenticated session.
  */
-function login_user(array $user): void {
+function login_user(array $user): void
+{
     init_session();
 
-    // Prevent Session Fixation attack: regenerate ID and discard old session ID
-    session_regenerate_id(true);
+    $role = (string) ($user['role'] ?? '');
 
-    // Rotate CSRF token across authentication boundary
+    if (!in_array($role, ['student', 'staff', 'admin'], true)) {
+        throw new InvalidArgumentException('Invalid user role.');
+    }
+
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        throw new RuntimeException('Unable to establish user session.');
+    }
+
+    // Prevent session fixation.
+    if (!session_regenerate_id(true)) {
+        throw new RuntimeException('Unable to regenerate session ID.');
+    }
+
+    // Rotate CSRF token after authentication.
     rotate_csrf_token();
 
-    $_SESSION['user_id']    = (int)$user['id'];
-    $_SESSION['user_name']  = (string)$user['name'];
-    $_SESSION['user_email'] = (string)$user['email'];
-    $_SESSION['user_role']  = (string)$user['role'];
+    // Store authenticated user information.
+    $_SESSION['user_id']    = (int) $user['id'];
+    $_SESSION['user_name']  = (string) $user['name'];
+    $_SESSION['user_email'] = (string) $user['email'];
+    $_SESSION['user_role']  = $role;
 }
 
 /**
- * Safely terminate the authenticated session while maintaining a clean
- * anonymous session for downstream flash notifications.
- *
- * - Wipes all authenticated user data from the session superglobal.
- * - Regenerates the session ID and deletes the old session store file on disk.
- * - Rotates the CSRF token to prevent session or token fixation.
- * - Leaves a clean anonymous session active so flash notifications survive redirect.
- *
- * @return void
+ * Safely terminate the authenticated session.
  */
-function logout_user(): void {
+function logout_user(): void
+{
     init_session();
 
-    // 1. Unset all session variables (removes all identity and credentials)
+    // Clear all session data.
     $_SESSION = [];
 
-    // 2. Expire the browser cookie for the current session identifier
+    // Expire the existing session cookie.
     if (ini_get('session.use_cookies')) {
         $params = session_get_cookie_params();
+
         setcookie(session_name(), '', [
             'expires'  => time() - 42000,
             'path'     => $params['path'],
@@ -147,13 +186,18 @@ function logout_user(): void {
         ]);
     }
 
-    // 3. Destroy the old session file on disk
+    // Destroy the authenticated session.
     session_destroy();
 
-    // 4. Start a fresh anonymous session so flash notifications survive redirect
-    session_start();
-    session_regenerate_id(true);
+    // Start a fresh anonymous session.
+    if (!session_start()) {
+        throw new RuntimeException('Unable to start a new session.');
+    }
 
-    // 5. Issue a fresh CSRF token for the new anonymous session
+    if (!session_regenerate_id(true)) {
+        throw new RuntimeException('Unable to regenerate session ID.');
+    }
+
+    // Generate a fresh anonymous-session CSRF token.
     rotate_csrf_token();
 }
