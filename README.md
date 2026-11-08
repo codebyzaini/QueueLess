@@ -15,6 +15,8 @@
 QueueLess is a secure, web-based campus queue management system designed to reduce waiting times, improve counter operations, and make university administrative services easier to access.
 
 QueueLess allows students to join service queues and monitor their tickets, staff members to manage their assigned counters, and administrators to monitor campus queue activity and manage staff accounts.
+<img width="1536" height="1024" alt="QueueLess System Architecture Diagram" src="https://github.com/user-attachments/assets/0bfe82c0-ee67-4888-8d8a-ac30d21b9923" />
+
 
 ## 2. Main Features
 
