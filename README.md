@@ -157,6 +157,7 @@ QueueLess/
 ```
 
 ## 6. Database Design
+![Uploading QueueLess Campus Queue ERD.png…]()
 
 QueueLess uses MySQL with InnoDB and UTF-8 support.
 
